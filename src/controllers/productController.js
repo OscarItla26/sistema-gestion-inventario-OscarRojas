@@ -287,33 +287,65 @@ const updateProduct = (req, res) => {
 };
 
 
+
 // DELETE: Eliminar un producto
 const deleteProduct = (req, res) => {
   try {
-    const result = db.prepare(`
-      DELETE FROM products WHERE id = ?
-    `).run(req.params.id);
+    const productId = Number(req.params.id);
 
-    if (result.changes === 0) {
-      return res.status(404).json({
+    if (!Number.isSafeInteger(productId) || productId <= 0) {
+      return res.status(400).json({
         success: false,
-        message: 'Producto no encontrado'
+        message: 'El identificador del producto no es válido.'
       });
     }
 
-    res.json({
+    const product = db.prepare(
+      'SELECT id, name FROM products WHERE id = ?'
+    ).get(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Producto no encontrado.'
+      });
+    }
+
+    // Evitar eliminar productos con movimientos registrados
+    const movements = db.prepare(
+      'SELECT id FROM inventory_movements WHERE product_id = ? LIMIT 1'
+    ).get(productId);
+
+    if (movements) {
+      return res.status(409).json({
+        success: false,
+        message: 'No se puede eliminar este producto porque tiene movimientos de inventario registrados.'
+      });
+    }
+
+    db.prepare(
+      'DELETE FROM products WHERE id = ?'
+    ).run(productId);
+
+    return res.json({
       success: true,
-      message: 'Producto eliminado correctamente'
+      message: 'Producto eliminado correctamente.',
+      data: {
+        productId,
+        productName: product.name
+      }
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error eliminando producto:', error);
+
+    return res.status(500).json({
       success: false,
-      message: 'Error al eliminar el producto',
-      error: error.message
+      message: 'Error interno al eliminar el producto.'
     });
   }
 };
+
 
 module.exports = {
   createProduct,

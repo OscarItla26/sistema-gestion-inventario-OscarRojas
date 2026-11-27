@@ -1,3 +1,4 @@
+
 const db = require('../config/database');
 
 // CREATE: Registrar una categoría
@@ -5,34 +6,42 @@ const createCategory = (req, res) => {
   try {
     const { name, description } = req.body;
 
-    if (!name || !name.trim()) {
+    if (typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'El nombre de la categoría es obligatorio'
+        message: 'El nombre de la categoría es obligatorio.'
       });
     }
 
-    const statement = db.prepare(`
+    const categoryName = name.trim();
+
+    const existing = db.prepare(
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER(?)'
+    ).get(categoryName);
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe una categoría con ese nombre.'
+      });
+    }
+
+    const result = db.prepare(`
       INSERT INTO categories (name, description)
       VALUES (?, ?)
-    `);
+    `).run(categoryName, description?.trim() || null);
 
-    const result = statement.run(
-      name.trim(),
-      description || null
-    );
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Categoría registrada correctamente',
+      message: 'Categoría registrada correctamente.',
       categoryId: result.lastInsertRowid
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error registrando categoría:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Error al registrar la categoría',
-      error: error.message
+      message: 'Error interno al registrar la categoría.'
     });
   }
 };
@@ -41,20 +50,19 @@ const createCategory = (req, res) => {
 const getCategories = (req, res) => {
   try {
     const categories = db.prepare(`
-      SELECT * FROM categories
-      ORDER BY id DESC
+      SELECT * FROM categories ORDER BY id DESC
     `).all();
 
-    res.json({
+    return res.json({
       success: true,
       data: categories
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error consultando categorías:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Error al consultar las categorías',
-      error: error.message
+      message: 'Error interno al consultar las categorías.'
     });
   }
 };
@@ -62,27 +70,36 @@ const getCategories = (req, res) => {
 // READ: Obtener una categoría por ID
 const getCategoryById = (req, res) => {
   try {
-    const category = db.prepare(`
-      SELECT * FROM categories WHERE id = ?
-    `).get(req.params.id);
+    const categoryId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(categoryId) || categoryId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El identificador de la categoría no es válido.'
+      });
+    }
+
+    const category = db.prepare(
+      'SELECT * FROM categories WHERE id = ?'
+    ).get(categoryId);
 
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: 'Categoría no encontrada'
+        message: 'Categoría no encontrada.'
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: category
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error consultando categoría:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Error al consultar la categoría',
-      error: error.message
+      message: 'Error interno al consultar la categoría.'
     });
   }
 };
@@ -90,42 +107,62 @@ const getCategoryById = (req, res) => {
 // UPDATE: Actualizar una categoría
 const updateCategory = (req, res) => {
   try {
+    const categoryId = Number(req.params.id);
     const { name, description } = req.body;
 
-    if (!name || !name.trim()) {
+    if (!Number.isSafeInteger(categoryId) || categoryId <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'El nombre de la categoría es obligatorio'
+        message: 'El identificador de la categoría no es válido.'
       });
     }
 
-    const result = db.prepare(`
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'El nombre de la categoría es obligatorio.'
+      });
+    }
+
+    const current = db.prepare(
+      'SELECT id FROM categories WHERE id = ?'
+    ).get(categoryId);
+
+    if (!current) {
+      return res.status(404).json({
+        success: false,
+        message: 'Categoría no encontrada.'
+      });
+    }
+
+    const existing = db.prepare(`
+      SELECT id FROM categories
+      WHERE LOWER(name) = LOWER(?) AND id != ?
+    `).get(name.trim(), categoryId);
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe otra categoría con ese nombre.'
+      });
+    }
+
+    db.prepare(`
       UPDATE categories
       SET name = ?, description = ?
       WHERE id = ?
-    `).run(
-      name.trim(),
-      description || null,
-      req.params.id
-    );
+    `).run(name.trim(), description?.trim() || null, categoryId);
 
-    if (result.changes === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Categoría no encontrada'
-      });
-    }
-
-    res.json({
+    return res.json({
       success: true,
-      message: 'Categoría actualizada correctamente'
+      message: 'Categoría actualizada correctamente.'
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error actualizando categoría:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Error al actualizar la categoría',
-      error: error.message
+      message: 'Error interno al actualizar la categoría.'
     });
   }
 };
@@ -133,27 +170,51 @@ const updateCategory = (req, res) => {
 // DELETE: Eliminar una categoría
 const deleteCategory = (req, res) => {
   try {
-    const result = db.prepare(`
-      DELETE FROM categories WHERE id = ?
-    `).run(req.params.id);
+    const categoryId = Number(req.params.id);
 
-    if (result.changes === 0) {
-      return res.status(404).json({
+    if (!Number.isSafeInteger(categoryId) || categoryId <= 0) {
+      return res.status(400).json({
         success: false,
-        message: 'Categoría no encontrada'
+        message: 'El identificador de la categoría no es válido.'
       });
     }
 
-    res.json({
+    const category = db.prepare(
+      'SELECT id FROM categories WHERE id = ?'
+    ).get(categoryId);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Categoría no encontrada.'
+      });
+    }
+
+    const products = db.prepare(
+      'SELECT id FROM products WHERE category_id = ? LIMIT 1'
+    ).get(categoryId);
+
+    if (products) {
+      return res.status(409).json({
+        success: false,
+        message: 'No se puede eliminar la categoría porque tiene productos asociados.'
+      });
+    }
+
+    db.prepare(
+      'DELETE FROM categories WHERE id = ?'
+    ).run(categoryId);
+
+    return res.json({
       success: true,
-      message: 'Categoría eliminada correctamente'
+      message: 'Categoría eliminada correctamente.'
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error eliminando categoría:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Error al eliminar la categoría',
-      error: error.message
+      message: 'Error interno al eliminar la categoría.'
     });
   }
 };

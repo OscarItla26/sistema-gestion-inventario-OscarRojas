@@ -1,0 +1,26 @@
+{
+  "name": "sistema-gestion-inventario-oscarrojas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OscarItla26/sistema-gestion-inventario-OscarRojas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OscarItla26/sistema-gestion-inventario-OscarRojas/issues"
+  },
+  "homepage": "https://github.com/OscarItla26/sistema-gestion-inventario-OscarRojas#readme",
+  "dependencies": {
+    "better-sqlite3": "^13.2.0",
+    "express": "^5.3.0"
+  }
+}

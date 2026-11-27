@@ -423,7 +423,9 @@ productForm.addEventListener('submit', async (event) => {
             throw new Error(result.message || 'Error al registrar el producto');
         }
 
-        formMessage.textContent = '¡Producto registrado correctamente!';
+        formMessage.textContent = editingProductId
+        ? '¡Producto actualizado correctamente!'
+        : '¡Producto registrado correctamente!';
 
         await initializeDashboard();
 

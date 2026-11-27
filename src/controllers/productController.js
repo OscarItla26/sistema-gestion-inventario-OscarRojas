@@ -1,6 +1,7 @@
 const db = require('../config/database');
 
-// CREATE: Registrar un producto
+
+ // CREATE: Registrar un producto
 const createProduct = (req, res) => {
   try {
     const {
@@ -9,17 +10,71 @@ const createProduct = (req, res) => {
       description,
       category_id,
       price,
-      quantity,
-      min_stock
+      quantity = 0,
+      min_stock = 5
     } = req.body;
 
-    if (!code || !name || price === undefined) {
+    // Validar campos obligatorios
+    if (!code?.trim() || !name?.trim() || price === undefined || price === '') {
       return res.status(400).json({
         success: false,
-        message: 'El código, nombre y precio son obligatorios'
+        message: 'El código, nombre y precio son obligatorios.'
       });
     }
 
+    // Convertir y validar valores numéricos
+    const productPrice = Number(price);
+    const productQuantity = Number(quantity);
+    const minimumStock = Number(min_stock);
+
+    if (!Number.isFinite(productPrice) || productPrice < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El precio debe ser un número válido mayor o igual a cero.'
+      });
+    }
+
+    if (!Number.isSafeInteger(productQuantity) || productQuantity < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'La cantidad debe ser un número entero no negativo.'
+      });
+    }
+
+    if (!Number.isSafeInteger(minimumStock) || minimumStock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El stock mínimo debe ser un número entero no negativo.'
+      });
+    }
+
+    // Comprobar que el código no esté registrado
+    const existingProduct = db.prepare(
+      'SELECT id FROM products WHERE code = ?'
+    ).get(code.trim());
+
+    if (existingProduct) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un producto registrado con ese código.'
+      });
+    }
+
+    // Comprobar que la categoría exista
+    if (category_id !== undefined && category_id !== null && category_id !== '') {
+      const category = db.prepare(
+        'SELECT id FROM categories WHERE id = ?'
+      ).get(category_id);
+
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          message: 'La categoría seleccionada no existe.'
+        });
+      }
+    }
+
+    // Registrar producto
     const statement = db.prepare(`
       INSERT INTO products
       (code, name, description, category_id, price, quantity, min_stock)
@@ -27,29 +82,31 @@ const createProduct = (req, res) => {
     `);
 
     const result = statement.run(
-      code,
-      name,
-      description || null,
+      code.trim(),
+      name.trim(),
+      description?.trim() || null,
       category_id || null,
-      Number(price),
-      Number(quantity ?? 0),
-      Number(min_stock ?? 5)
+      productPrice,
+      productQuantity,
+      minimumStock
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Producto registrado correctamente',
+      message: 'Producto registrado correctamente.',
       productId: result.lastInsertRowid
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error('Error registrando producto:', error);
+
+    return res.status(500).json({
       success: false,
-      message: 'Error al registrar el producto',
-      error: error.message
+      message: 'Error interno al registrar el producto.'
     });
   }
 };
+
 
 // READ: Obtener todos los productos
 const getProducts = (req, res) => {

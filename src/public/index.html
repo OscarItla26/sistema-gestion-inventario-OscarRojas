@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OR Inventory - Sistema de Gestión de Inventario">
+    <title>OR Inventory | Gestión de Inventario</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-logo">OR</div>
+                <div class="brand-info">
+                    <h2>OR INVENTORY</h2>
+                    <span>Inventory Management</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <p class="nav-label">MENÚ PRINCIPAL</p>
+
+                <a href="#dashboardSection" class="nav-link active" id="dashboardNav">
+                  <span>▦</span>
+                   Dashboard
+                </a>
+
+                <a href="#inventorySection" class="nav-link" id="inventoryNav">
+                    <span>▤</span>
+                    Inventario
+                </a>
+
+                <a href="#" class="nav-link" id="registerProductNav">
+                    <span>＋</span>
+                    Registrar producto
+                </a>
+
+                <a href="#categoriesSection" class="nav-link" id="categoriesNav">
+                <span>▣</span>
+                Categorías
+                </a>
+
+                <p class="nav-label">GESTIÓN</p>
+
+                <a href="#alertsSection" class="nav-link" id="stockAlertsNav">
+                    <span>⚠</span>
+                     Alertas de stock
+                </a>
+
+                <a href="#movementsSection" class="nav-link" id="movementsNav">
+                    <span class="nav-icon">⇄</span>
+                    <span>Movimientos</span>
+                </a>
+
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar">OR</div>
+                <div>
+                    <strong>Administrador</strong>
+                    <span>OR Inventory</span>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <div>
+                    <p class="welcome-text">BIENVENIDO A OR INVENTORY</p>
+                    <h1>Dashboard</h1>
+                </div>
+
+                <div class="topbar-profile">
+                    <div class="profile-avatar">OR</div>
+                    <span>Administrador</span>
+                </div>
+            </header>
+
+            <section class="dashboard-content">
+
+                <section id="dashboardSection">
+
+    <div class="section-heading">
+        <div>
+            <h2>Resumen general</h2>
+            <p>Visualiza el estado actual de tu inventario.</p>
+        </div>
+    </div>
+
+                <!-- TARJETAS DE ESTADÍSTICAS -->
+                <div class="stats-grid">
+
+                    <article class="stat-card">
+                        <div class="stat-icon">▤</div>
+                        <p>Total de productos</p>
+                        <h3 id="totalProducts">0</h3>
+                        <span>Productos registrados</span>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon">▣</div>
+                        <p>Categorías</p>
+                        <h3 id="totalCategories">0</h3>
+                        <span>Categorías disponibles</span>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon">▥</div>
+                        <p>Unidades en stock</p>
+                        <h3 id="totalStock">0</h3>
+                        <span>Existencias actuales</span>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon warning">⚠</div>
+                        <p>Stock bajo</p>
+                        <h3 id="lowStock">0</h3>
+                        <span>Productos por revisar</span>
+                    </article>
+
+                </div>
+
+                </section>
+
+                <!-- TABLA DE PRODUCTOS -->
+                <section class="inventory-section" id="inventorySection">
+
+                    <div class="inventory-header">
+                        <div>
+                            <h2>Inventario reciente</h2>
+                            <p>Consulta los últimos productos registrados.</p>
+                        </div>
+
+                        <button class="primary-button" id="addProductBtn">
+                            + Nuevo producto
+                        </button>
+                    </div>
+
+
+                    <div class="search-container">
+                      <input
+                          type="search"
+                          id="productSearch"
+                          placeholder="Buscar por código, producto, categoría, precio, cantidad o estado..."
+                          autocomplete="off"
+                        >
+                    </div>
+
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>CÓDIGO</th>
+                                    <th>PRODUCTO</th>
+                                    <th>CATEGORÍA</th>
+                                    <th>PRECIO</th>
+                                    <th>CANTIDAD</th>
+                                    <th>ESTADO</th>
+                                    <th>ACCIONES</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="productsTable">
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        No hay productos registrados todavía.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </section>
+
+            <!-- GESTIÓN DE CATEGORÍAS -->
+            <section class="categories-section" id="categoriesSection">
+
+               <div class="inventory-header">
+                  <div>
+                     <h2>Gestión de categorías</h2>
+                     <p>Administra las categorías de tus productos.</p>
+                    </div>
+
+                    <button class="primary-button" id="addCategoryBtn">
+                      + Nueva categoría
+                    </button>
+                </div>
+
+                <div class="table-container">
+                  <table>
+                       <thead>
+                           <tr>
+                             <th>ID</th>
+                             <th>NOMBRE</th>
+                             <th>DESCRIPCIÓN</th>
+                             <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="categoriesTable">
+                          <tr>
+                              <td colspan="4" class="empty-state">
+                                  No hay categorías registradas todavía.
+                              </td>
+                           </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
+
+
+<!-- ALERTAS DE STOCK -->
+<section class="categories-section" id="alertsSection">
+
+    <div class="inventory-header">
+        <div>
+            <h2>Alertas de stock</h2>
+            <p>Supervisa los productos que necesitan reposición.</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>CÓDIGO</th>
+                    <th>PRODUCTO</th>
+                    <th>CANTIDAD ACTUAL</th>
+                    <th>STOCK MÍNIMO</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+
+            <tbody id="alertsTable">
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        No hay alertas de stock.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+<!-- Historial de movimientos -->
+<section class="categories-section section-hidden" id="movementsSection">
+
+    
+<div class="section-heading">
+    <div>
+        <h2>Movimientos de inventario</h2>
+        <p>Historial de entradas y salidas de productos.</p>
+    </div>
+
+    <button class="btn-primary" id="addMovementBtn">
+        + Registrar movimiento
+    </button>
+</div>
+
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Motivo</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody id="movementsTable">
+                <tr>
+                    <td colspan="6">No hay movimientos registrados.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+
+            </section>
+
+            <footer class="main-footer">
+                <p>© 2026 OR Inventory. Sistema de Gestión de Inventario.</p>
+                <span>Desarrollado con identidad OR.</span>
+            </footer>
+
+        </main>
+
+    </div>
+
+    <!-- Modal para registrar productos -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h2>Registrar producto</h2>
+        <p>Completa los datos del nuevo producto.</p>
+      </div>
+
+      <button type="button" class="close-modal" id="closeModalBtn">
+        &times;
+      </button>
+    </div>
+
+    <form id="productForm">
+      <div class="form-group">
+        <label for="productCode">Código del producto</label>
+        <input type="text" id="productCode" required
+          placeholder="Ej. PROD-001">
+      </div>
+
+      <div class="form-group">
+        <label for="productName">Nombre del producto</label>
+        <input type="text" id="productName" required
+          placeholder="Ej. Laptop Lenovo">
+      </div>
+
+      <div class="form-group">
+        <label for="productDescription">Descripción</label>
+        <textarea id="productDescription"
+          placeholder="Descripción del producto"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="productCategory">Categoría</label>
+        <select id="productCategory">
+          <option value="">Sin categoría</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productPrice">Precio (RD$)</label>
+          <input type="number" id="productPrice"
+            min="0" step="0.01" required placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label for="productQuantity">Cantidad</label>
+          <input type="number" id="productQuantity"
+            min="0" step="1" required placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="productMinStock">Stock mínimo</label>
+        <input type="number" id="productMinStock"
+          min="0" step="1" value="5" required>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" id="cancelModalBtn">
+          Cancelar
+        </button>
+
+        <button type="submit" class="save-btn">
+          Guardar producto
+        </button>
+      </div>
+
+      <p id="formMessage" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para registrar categorías -->
+<div class="modal" id="categoryModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <div>
+                <h2 id="categoryModalTitle">Nueva categoría</h2>
+                <p>Completa los datos de la categoría.</p>
+            </div>
+
+            <button type="button" class="close-modal" id="closeCategoryModal">
+                &times;
+            </button>
+        </div>
+
+        <form id="categoryForm">
+
+            <div class="form-group">
+                <label for="categoryName">Nombre de la categoría</label>
+                <input
+                    type="text"
+                    id="categoryName"
+                    required
+                    placeholder="Ej. Electrónica"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="categoryDescription">Descripción</label>
+                <textarea
+                    id="categoryDescription"
+                    placeholder="Describe esta categoría"
+                ></textarea>
+            </div>
+
+            <div class="form-actions">
+
+                <button type="button" class="cancel-btn" id="cancelCategoryModal">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="save-btn" id="saveCategoryBtn">
+                    Guardar categoría
+                </button>
+
+            </div>
+
+            <p id="categoryFormMessage" role="status"></p>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- Modal de movimientos de inventario -->
+<div class="modal" id="movementModal">
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2>Registrar movimiento</h2>
+            <button type="button" class="close-modal" id="closeMovementModalBtn">&times;</button>
+        </div>
+
+        <form id="movementForm">
+
+            <div class="form-group">
+                <label for="movementProduct">Producto</label>
+                <select id="movementProduct" required>
+                    <option value="">Seleccionar producto</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="movementType">Tipo de movimiento</label>
+                <select id="movementType" required>
+                    <option value="">Seleccionar tipo</option>
+                    <option value="entrada">Entrada</option>
+                    <option value="salida">Salida</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="movementQuantity">Cantidad</label>
+                <input type="number" id="movementQuantity" min="1" step="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="movementReason">Motivo</label>
+                <input type="text" id="movementReason" placeholder="Ej. Reposición de inventario">
+            </div>
+
+            <p id="movementFormMessage" role="status"></p>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="cancelMovementBtn">Cancelar</button>
+                <button type="submit" class="btn-primary">Guardar movimiento</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+    <script src="js/app.js"></script>
+
+</body>
+</html>

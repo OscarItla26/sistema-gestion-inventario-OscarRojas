@@ -13,6 +13,9 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
+// Productos disponibles para el catálogo y sus filtros
+let catalogProducts = [];
+
 // Cargar productos desde la API
 async function loadProducts() {
     try {
@@ -24,6 +27,8 @@ async function loadProducts() {
         }
 
         const products = result.data;
+        catalogProducts = products;
+
 
         // Actualizar estadísticas
         totalProducts.textContent = products.length;
@@ -40,56 +45,9 @@ async function loadProducts() {
         totalStock.textContent = stockTotal;
         lowStock.textContent = productsLowStock.length;
 
-        // Mostrar productos en la tabla de inventario
-        if (products.length === 0) {
-            productsTable.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        No hay productos registrados todavía.
-                    </td>
-                </tr>
-            `;
-        } else {
-            productsTable.innerHTML = products.map(product => {
-                const quantity = Number(product.quantity);
-                const minStock = Number(product.min_stock);
 
-                let status = 'Disponible';
-                let statusClass = 'available';
-
-                if (quantity === 0) {
-                    status = 'Agotado';
-                    statusClass = 'low';
-                } else if (quantity <= minStock) {
-                    status = 'Stock bajo';
-                    statusClass = 'low';
-                }
-
-                return `
-                    <tr>
-                        <td>${escapeHTML(product.code)}</td>
-                        <td>${escapeHTML(product.name)}</td>
-                        <td>${escapeHTML(product.category_name || 'Sin categoría')}</td>
-                        <td>${formatCurrency(Number(product.price))}</td>
-                        <td>${quantity}</td>
-                        <td>
-                            <span class="stock-status ${statusClass}">
-                                ${status}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="action-btn edit-btn" data-id="${product.id}">
-                                Editar
-                            </button>
-
-                            <button class="action-btn delete-btn" data-id="${product.id}">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+        // Mostrar productos aplicando los filtros del catálogo
+        renderProductCatalog();
 
         // Mostrar alertas de stock
         const alertsTable = document.getElementById('alertsTable');
@@ -157,6 +115,20 @@ async function loadCategories() {
         }
 
         const categories = result.data;
+
+        // Llenar el filtro de categorías del catálogo
+const selectedCategory = categoryFilter.value;
+
+categoryFilter.innerHTML = `
+    <option value="">Todas las categorías</option>
+    ${categories.map(category => `
+        <option value="${category.id}">
+            ${escapeHTML(category.name)}
+        </option>
+    `).join('')}
+`;
+
+categoryFilter.value = selectedCategory;
 
         totalCategories.textContent = categories.length;
 
@@ -646,33 +618,117 @@ async function deleteCategory(categoryId) {
 }
 
 
+
 // ======================================
-// BUSCADOR DE PRODUCTOS
+// CATÁLOGO Y FILTROS DE PRODUCTOS
 // ======================================
 
 const productSearch = document.getElementById('productSearch');
+const categoryFilter = document.getElementById('categoryFilter');
+const stockFilter = document.getElementById('stockFilter');
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
-productSearch.addEventListener('input', () => {
-    const searchTerm = productSearch.value
-        .trim()
-        .toLowerCase();
+function renderProductCatalog() {
+    const searchTerm = productSearch.value.trim().toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedStock = stockFilter.value;
 
-    const rows = document.querySelectorAll('#productsTable tr');
+    const filteredProducts = catalogProducts.filter(product => {
+        const quantity = Number(product.quantity);
+        const minStock = Number(product.min_stock);
 
-    rows.forEach(row => {
-        // Excluir la columna ACCIONES
-        const productCells = Array.from(row.cells)
-            .slice(0, 6);
+        const status = quantity === 0
+            ? 'out'
+            : quantity <= minStock
+                ? 'low'
+                : 'available';
 
-        const productText = productCells
-            .map(cell => cell.textContent.toLowerCase())
-            .join(' ');
+        const searchableText = [
+            product.code,
+            product.name,
+            product.description,
+            product.category_name,
+            product.price,
+            quantity,
+            status
+        ].join(' ').toLowerCase();
 
-        row.style.display = productText.includes(searchTerm)
-            ? ''
-            : 'none';
+        const matchesSearch = searchableText.includes(searchTerm);
+
+        const matchesCategory = !selectedCategory ||
+            String(product.category_id) === selectedCategory;
+
+        const matchesStock = !selectedStock ||
+            status === selectedStock;
+
+        return matchesSearch && matchesCategory && matchesStock;
     });
+
+    if (filteredProducts.length === 0) {
+        productsTable.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    No se encontraron productos con esos filtros.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    productsTable.innerHTML = filteredProducts.map(product => {
+        const quantity = Number(product.quantity);
+        const minStock = Number(product.min_stock);
+
+        const status = quantity === 0
+            ? 'Agotado'
+            : quantity <= minStock
+                ? 'Stock bajo'
+                : 'Disponible';
+
+        const statusClass = quantity <= minStock
+            ? 'low'
+            : 'available';
+
+        return `
+            <tr>
+                <td>${escapeHTML(product.code)}</td>
+                <td>${escapeHTML(product.name)}</td>
+                <td>${escapeHTML(product.category_name || 'Sin categoría')}</td>
+                <td>${formatCurrency(Number(product.price))}</td>
+                <td>${quantity}</td>
+                <td>
+                    <span class="stock-status ${statusClass}">
+                        ${status}
+                    </span>
+                </td>
+                <td>
+                    <button class="action-btn edit-btn" data-id="${product.id}">
+                        Editar
+                    </button>
+
+                    <button class="action-btn delete-btn" data-id="${product.id}">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Actualizar catálogo al cambiar cualquier filtro
+productSearch.addEventListener('input', renderProductCatalog);
+categoryFilter.addEventListener('change', renderProductCatalog);
+stockFilter.addEventListener('change', renderProductCatalog);
+
+// Limpiar todos los filtros
+clearFiltersBtn.addEventListener('click', () => {
+    productSearch.value = '';
+    categoryFilter.value = '';
+    stockFilter.value = '';
+
+    renderProductCatalog();
 });
+
 
 // ======================================
 // NAVEGACIÓN ENTRE SECCIONES

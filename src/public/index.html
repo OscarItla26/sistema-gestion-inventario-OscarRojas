@@ -147,14 +147,41 @@
                     </div>
 
 
-                    <div class="search-container">
-                      <input
-                          type="search"
-                          id="productSearch"
-                          placeholder="Buscar por código, producto, categoría, precio, cantidad o estado..."
-                          autocomplete="off"
-                        >
-                    </div>
+
+<div class="catalog-filters">
+
+    <div class="search-container">
+        <input
+            type="search"
+            id="productSearch"
+            placeholder="Buscar por código, nombre o descripción..."
+            autocomplete="off"
+        >
+    </div>
+
+    <div class="filter-group">
+        <label for="categoryFilter">Categoría</label>
+        <select id="categoryFilter">
+            <option value="">Todas las categorías</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="stockFilter">Disponibilidad</label>
+        <select id="stockFilter">
+            <option value="">Todos los estados</option>
+            <option value="available">Disponible</option>
+            <option value="low">Stock bajo</option>
+            <option value="out">Agotado</option>
+        </select>
+    </div>
+
+    <button type="button" class="btn-secondary" id="clearFiltersBtn">
+        Limpiar filtros
+    </button>
+
+</div>
+
 
 
                     <div class="table-container">
@@ -258,7 +285,7 @@
 <!-- Historial de movimientos -->
 <section class="categories-section section-hidden" id="movementsSection">
 
-    
+
 <div class="section-heading">
     <div>
         <h2>Movimientos de inventario</h2>
